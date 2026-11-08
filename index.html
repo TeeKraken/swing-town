@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Swing Town: a gerrymandering puzzle about thin wins and small swings</title>
+    <meta name="description" content="A made-up town, two colors of voters and six districts to draw. Slide a small swing in the vote and see why a greedy map can lose everything while a safer one holds. A free classroom companion to the gerrymandering puzzle." />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f4f1ea" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#18161d" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <main id="main" tabindex="-1">
+      <div class="screen">
+        <header class="top">
+          <h1><span class="logo" aria-hidden="true"></span>Swing Town</h1>
+          <p class="lede">A made-up town, two colors of voters, and six districts to draw. Slide a small swing in the vote and see which maps hold up.</p>
+        </header>
+
+        <div class="layout">
+          <section class="card story" id="story" aria-labelledby="step-title">
+            <p class="step-count" id="step-count">Step 1 of 5</p>
+            <h2 id="step-title" tabindex="-1">Meet Swing Town</h2>
+            <div class="step-body" id="step-body"></div>
+            <div class="step-actions" id="step-actions"></div>
+            <nav class="step-nav" aria-label="Steps">
+              <button type="button" class="btn btn-quiet" id="step-back">Back</button>
+              <ol class="dots" id="step-dots"></ol>
+              <button type="button" class="btn btn-go" id="step-next">Next</button>
+            </nav>
+          </section>
+
+          <section class="board" id="board" aria-label="The town map">
+            <div class="card score" id="score">
+              <p class="map-name" id="map-name"></p>
+              <p class="seats" id="seats" aria-live="polite"></p>
+              <p class="score-note" id="score-note"></p>
+            </div>
+
+            <div class="card map-card">
+              <div class="map-tools" role="group" aria-label="Choose a map">
+                <button type="button" class="chip" data-preset="fair">Fair boxes</button>
+                <button type="button" class="chip" data-preset="greedy">Greedy</button>
+                <button type="button" class="chip" data-preset="safe">Safe seats</button>
+                <button type="button" class="chip chip-draw" id="draw-toggle" aria-pressed="false">Draw your own</button>
+              </div>
+
+              <div class="grid-wrap">
+                <div class="grid" id="grid"></div>
+              </div>
+              <p class="legend"><span class="sw sw-o" aria-hidden="true"></span>The number on each block is how many of its 100 voters vote orange<span id="legend-swing"></span>. The rest vote purple. Thick lines are district borders.</p>
+
+              <div class="draw" id="draw" hidden>
+                <p class="draw-help" id="draw-help">Pick a district, then tap or drag across blocks to paint them. On a keyboard: arrow keys move, Enter paints, keys 1 to 6 pick a district, Delete clears a block.</p>
+                <div class="palette" id="palette" role="group" aria-label="District to paint"></div>
+                <div class="row-buttons">
+                  <button type="button" class="btn btn-quiet" id="clear-map">Clear all blocks</button>
+                  <button type="button" class="btn btn-quiet" id="draw-done">Done drawing</button>
+                </div>
+              </div>
+
+              <div class="problems" id="problems" role="status" aria-live="polite"></div>
+            </div>
+
+            <div class="card challenge" id="challenge" hidden>
+              <h3>The challenge</h3>
+              <p>Draw a map that keeps a majority of seats for orange (4 of 6) even after a <b>5-point swing toward purple</b>.</p>
+              <p class="challenge-status" id="challenge-status" role="status" aria-live="polite"></p>
+              <details class="hint">
+                <summary>Need a hint?</summary>
+                <p>The greedy map wins big and loses big. The safe map wins less and holds. You need something in between. Let purple win two districts easily, and make each of your four districts at least 56% orange, so it's still over 50% after the swing.</p>
+              </details>
+            </div>
+
+            <div class="card swing-card">
+              <label class="swing-label" for="swing">
+                <span>Swing</span>
+                <output id="swing-out" for="swing">No swing</output>
+              </label>
+              <input type="range" id="swing" min="-10" max="10" step="1" value="0" aria-describedby="swing-help" />
+              <div class="swing-ends" aria-hidden="true"><span>10 toward purple</span><span>0</span><span>10 toward orange</span></div>
+              <p class="hint" id="swing-help">A swing of 3 points toward purple means that in every block, 3 of the 100 voters switch from orange to purple.</p>
+            </div>
+
+            <div class="card chart-card">
+              <h3>Orange seats at every swing</h3>
+              <div class="chart" id="chart"></div>
+              <details class="table-details">
+                <summary>Show as a table</summary>
+                <div id="curve-table"></div>
+              </details>
+            </div>
+
+            <div class="card districts">
+              <h3>Districts</h3>
+              <ol class="district-list" id="district-list"></ol>
+            </div>
+
+            <div class="card print-card">
+              <button type="button" class="btn btn-go" id="print-btn">Print this map</button>
+              <p class="hint">Prints the current map, how each district votes, and a table of seats at every swing, to use with the paper puzzle.</p>
+            </div>
+          </section>
+        </div>
+
+        <section class="card about" aria-labelledby="about-title">
+          <h2 id="about-title">About this page</h2>
+          <p><b>Swing Town is made up.</b> Orange and purple are just colors, not parties, and the town isn't a real place.</p>
+          <p><b>The swing is a simplification.</b> Here every block shifts by exactly the same amount. Real elections don't work that neatly, and this isn't a model of any real election. It's a way to see one idea: a map built on many thin wins can lose them all together.</p>
+          <p><b>For the classroom.</b> This is an unofficial companion to the <a id="jrmf-link" href="https://jrmf.org/puzzle/gerrymandering">gerrymandering puzzle</a> from the Julia Robinson Mathematics Festival. It isn't made by or affiliated with JRMF. Their puzzle has students draw districts to help one color win; this page asks what happens to those maps when the vote moves a little.</p>
+        </section>
+
+        <footer class="foot">
+          <p>Nothing you draw is uploaded or saved. No account, no cookies, no analytics scripts, and no tracking by the app. Our host, Vercel, keeps request logs that can include IP addresses and the site you came from. We only look at weekly totals of requests to load the app, grouped by that site, to see whether people find it. We don't look at individual requests.</p>
+          <p>Made entirely by an AI (Claude, by Anthropic) from <a id="idea-link" href="#">an idea on Somebody Build This</a>. <a id="repo-link" href="#">Open source</a>.</p>
+          <p>Wish something existed? <a id="wish-link" href="#">Post it on Somebody Build This</a>, no tech words needed.</p>
+        </footer>
+      </div>
+
+      <article class="print-sheet" id="print-sheet" aria-hidden="true"></article>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
