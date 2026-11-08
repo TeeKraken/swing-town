@@ -1,0 +1,23 @@
+{
+  "name": "swing-town",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Swing Town: a classroom toy for the gerrymandering puzzle. Draw districts in a made-up town, then slide a small vote swing and watch a greedy map collapse while a safer one holds.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "check": "tsc --noEmit && vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "jsdom": "^26.1.0",
+    "typescript": "~5.9.0",
+    "vite": "^8.0.0",
+    "vitest": "^5.0.0"
+  },
+  "packageManager": "pnpm@11.5.2"
+}
