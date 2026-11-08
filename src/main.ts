@@ -89,8 +89,8 @@ const STEPS: Step[] = [
   {
     title: "A greedy map",
     body: () => `
-      <p>Same town, same voters, new lines. This map packs as many purple voters as it can into one district along the bottom, then cracks the rest so orange wins every other district by a hair.</p>
-      <p>Now orange wins ${seatsOf("greedy")} of 6 seats with less than half the votes. Look at the district list: most of orange's wins are under 54%.</p>`,
+      <p>Same town, same voters, new lines. This map packs as many purple voters as it can into one district along the bottom, then cracks the rest. Orange gets four thin wins and one safer win.</p>
+      <p>Now orange wins ${seatsOf("greedy")} of 6 seats with less than half the votes. Look at the district list: four of its five wins are less than four points above half.</p>`,
     actions: [{ label: "Show the greedy map", run: () => show("greedy") }],
     enter: () => show("greedy"),
   },
@@ -98,7 +98,7 @@ const STEPS: Step[] = [
     title: "A small swing",
     body: () => `
       <p>Voters change their minds a little from one election to the next. Say every block moves 3 points toward purple: in each block, 3 of the 100 voters switch.</p>
-      <p>Orange's thin wins fall together. ${seatsOf("greedy")} seats drop to ${seatsOf("greedy", -3)}. A map drawn to win as many seats as possible can backfire when the vote shifts. People sometimes call this a <i>dummymander</i>.</p>
+      <p>Orange's four thin wins fall together, and only the safer one is left: ${seatsOf("greedy")} seats drop to ${seatsOf("greedy", -3)}. A map drawn to win as many seats as possible can backfire when the vote shifts. People sometimes call this a <i>dummymander</i>.</p>
       <p>Try the slider yourself. The chart shows orange's seats at every swing.</p>`,
     actions: [
       { label: "Swing 3 points toward purple", run: () => show("greedy", -3) },
@@ -109,7 +109,7 @@ const STEPS: Step[] = [
   {
     title: "Safe seats",
     body: () => `
-      <p>This map asks for less. Orange's voters are kept together in the top three rows, so orange wins only ${seatsOf("safe")} seats, but each by about 10 points or more.</p>
+      <p>This map asks for less. Orange's voters are kept together in the top three rows, so orange wins only ${seatsOf("safe")} seats, but each is at least ten points above half.</p>
       <p>Slide the swing all the way to 10 points toward purple. Orange still has ${seatsOf("safe", -MAX_SWING)} seats. Fewer seats, but they hold.</p>`,
     actions: [
       { label: "Show the safe seats map", run: () => show("safe") },
@@ -220,6 +220,11 @@ function renderGrid(valid: boolean) {
   grid.classList.toggle("is-drawing", state.drawing);
   if (state.drawing) {
     grid.setAttribute("aria-label", "Map of Swing Town. Paint blocks to draw districts.");
+  } else if (!valid) {
+    grid.setAttribute(
+      "aria-label",
+      "Map of Swing Town. This map isn't finished, so there are no results yet. The list below says what to fix.",
+    );
   } else {
     const s = seats(TOWN, state.map, state.swing);
     grid.setAttribute(
@@ -287,16 +292,33 @@ grid.addEventListener("pointerdown", (e) => {
   } catch {
     /* not supported everywhere (jsdom) */
   }
-  const i = Number(el.dataset.i);
-  state.focusCell = i;
-  paintCell(i);
-  render();
+  selectCell(Number(el.dataset.i));
+  paintCell(state.focusCell);
 });
 
 grid.addEventListener("pointermove", (e) => {
   if (!painting || !state.drawing) return;
   const i = cellFromPoint(e.clientX, e.clientY);
-  if (i !== null) paintCell(i);
+  if (i === null) return;
+  if (i !== state.focusCell) selectCell(i);
+  paintCell(i);
+});
+
+/**
+ * Make block i the keyboard spot: the roving tab stop and real DOM focus move
+ * together, so keys always act on the block that has focus.
+ */
+function selectCell(i: number) {
+  state.focusCell = i;
+  cells.forEach((c, k) => (c.tabIndex = k === i ? 0 : -1));
+  cells[i].focus({ preventScroll: true });
+}
+
+// Focus can also arrive by Tab or a screen reader's own navigation: follow it.
+grid.addEventListener("focusin", (e) => {
+  if (!state.drawing) return;
+  const el = (e.target as HTMLElement).closest<HTMLElement>(".cell");
+  if (el) state.focusCell = Number(el.dataset.i);
 });
 
 const stopPainting = () => {
@@ -308,6 +330,9 @@ grid.addEventListener("lostpointercapture", stopPainting);
 
 grid.addEventListener("keydown", (e) => {
   if (!state.drawing) return;
+  // Act on the block that actually has focus.
+  const focused = (e.target as HTMLElement).closest?.<HTMLElement>(".cell");
+  if (focused && grid.contains(focused)) state.focusCell = Number(focused.dataset.i);
   const i = state.focusCell;
   const r = Math.floor(i / TOWN.cols);
   const c = i % TOWN.cols;
@@ -533,22 +558,25 @@ function renderPrint(valid: boolean, problems: string[]) {
       return `<div class="pcell ${borderClasses(state.map, i)}"><span class="dno">${d === null ? "" : d + 1}</span><span class="num">${v}</span></div>`;
     })
     .join("");
+  const cellText = (share: number, w: Parameters<typeof winnerLabel>[0]) => `${pct(share)} orange · ${winnerLabel(w)}`;
   const districtRows = results0
     .map((r, k) => {
       const s = resultsS[k];
       const cols = valid
-        ? `<td>${pct(r.orangeShare)}</td><td>${winnerLabel(r.winner)}</td>${withSwing ? `<td>${pct(s.orangeShare)}</td><td>${winnerLabel(s.winner)}</td>` : ""}`
-        : `<td colspan="${withSwing ? 4 : 2}">${r.blocks} of ${SIZE} blocks</td>`;
+        ? `<td>${cellText(r.orangeShare, r.winner)}</td>${withSwing ? `<td>${cellText(s.orangeShare, s.winner)}</td>` : ""}`
+        : `<td colspan="${withSwing ? 2 : 1}">${r.blocks} of ${SIZE} blocks</td>`;
       return `<tr><th scope="row">District ${r.district + 1}</th>${cols}</tr>`;
     })
     .join("");
-  const head = `<tr><th scope="col">District</th><th scope="col">Orange share, no swing</th><th scope="col">Winner, no swing</th>${withSwing ? `<th scope="col">Orange share, ${swingLabel(state.swing).toLowerCase()}</th><th scope="col">Winner</th>` : ""}</tr>`;
+  const head = `<tr><th scope="col">District</th><th scope="col">No swing</th>${withSwing ? `<th scope="col">${swingLabel(state.swing)}</th>` : ""}</tr>`;
   const s0 = seats(TOWN, state.map, 0);
+  const curve = seatCurve(TOWN, state.map);
   $("print-sheet").innerHTML = `
     <header class="p-head">
       <h1>Swing Town</h1>
       <p>Map: <b>${mapName()}</b>. ${valid ? `With no swing, orange wins ${s0.orange} of 6 seats and purple wins ${s0.purple}${s0.tie ? ` (${s0.tie} tied)` : ""}.` : "This map isn't finished yet."}</p>
     </header>
+    <p class="p-frame">Swing Town is a made-up town, and orange and purple aren't parties. The uniform swing is a simplification, not a model of real elections. An unofficial companion to the gerrymandering puzzle from the Julia Robinson Mathematics Festival (${JRMF_PUZZLE_URL}), not made by or affiliated with JRMF.</p>
     <div class="p-top">
       <div class="p-map">
         <div class="pgrid">${cellsHtml}</div>
@@ -561,8 +589,11 @@ function renderPrint(valid: boolean, problems: string[]) {
         <p class="p-note">A swing of 3 points toward purple means that in every block, 3 of the 100 voters switch from orange to purple. A district needs more than half its votes to win. Exactly half is a tie.</p>
       </div>
     </div>
-    ${valid ? `<h2>Seats at every swing</h2>${curveTableHtml(seatCurve(TOWN, state.map), null)}` : ""}
-    <p class="p-foot">Swing Town is a made-up town; orange and purple aren't parties. The uniform swing is a simplification, not a model of real elections. An unofficial companion to the gerrymandering puzzle from the Julia Robinson Mathematics Festival (${JRMF_PUZZLE_URL}), not made by or affiliated with JRMF.</p>`;
+    ${
+      valid
+        ? `<h2>Seats at every swing</h2><div class="p-curve">${curveTableHtml(curve.filter((p) => p.swing <= 0), null)}${curveTableHtml(curve.filter((p) => p.swing > 0), null)}</div>`
+        : ""
+    }`;
 }
 
 function render() {

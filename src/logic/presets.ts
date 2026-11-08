@@ -44,13 +44,13 @@ export const PRESETS: readonly Preset[] = [
   {
     id: "greedy",
     name: "Greedy (packed and cracked)",
-    blurb: "Purple voters are packed into one district, and the rest are cracked so orange just barely wins five.",
+    blurb: "Purple voters are packed into one district, and the rest are cracked so orange gets four thin wins and one safer win.",
     map: parseMap(["123345", "123345", "123345", "122445", "112455", "666666"]),
   },
   {
     id: "safe",
     name: "Safe seats",
-    blurb: "Orange voters are kept together, so orange wins three districts by a lot and lets purple win the other three.",
+    blurb: "Orange voters are kept together, so orange wins three districts, each at least ten points above half, and lets purple win the other three.",
     map: parseMap(["111111", "222222", "333333", "444444", "555555", "666666"]),
   },
 ];

@@ -166,10 +166,41 @@ describe("Swing Town page", () => {
     expect(sheet.querySelectorAll(".pcell")).toHaveLength(36);
     expect(sheet.textContent).toContain("Map: Your own map");
     expect(sheet.textContent).toContain("Seats at every swing");
-    expect(sheet.querySelectorAll("table.curve")).toHaveLength(2);
+    // the district table, then seats at every swing split in two halves (-10..0 and 1..10)
+    expect(sheet.querySelectorAll("table.curve")).toHaveLength(3);
+    expect(sheet.querySelectorAll(".p-curve tbody tr")).toHaveLength(21);
+    // the framing comes right after the heading, before the worksheet
+    expect(sheet.children[1].className).toBe("p-frame");
+    expect(sheet.textContent).toContain("5 points toward purple");
     // the printed map shows the numbers before any swing
     expect(sheet.querySelector(".pcell .num")!.textContent).toBe("62");
     expect(sheet.textContent).toContain("not made by or affiliated with JRMF");
+  });
+
+  it("doesn't announce results for an unfinished map", () => {
+    click($("clear-map"));
+    click($("draw-done"));
+    const label = $("grid").getAttribute("aria-label")!;
+    expect(label).toContain("isn't finished");
+    expect(label).not.toMatch(/wins|tied/);
+    expect(text("seats")).toContain("Map not finished");
+    // unequal sizes: district 1 gets 7 blocks, district 6 only 5
+    click($("draw-toggle"));
+    paintMap(["111223", "111233", "444223", "444253", "666553", "666555"]);
+    pickDistrict(1);
+    pointerDown(cells()[30]); // a district 6 block: sizes become 7 and 5
+    click($("draw-done"));
+    expect(text("problems")).toContain("District 1 has 7 blocks");
+    const label2 = $("grid").getAttribute("aria-label")!;
+    expect(label2).toContain("isn't finished");
+    expect(label2).not.toMatch(/wins|tied/);
+    expect(text("district-list")).not.toContain("wins");
+    // put it back for the next test
+    click($("draw-toggle"));
+    pickDistrict(6);
+    pointerDown(cells()[30]);
+    click($("draw-done"));
+    expect($("grid").getAttribute("aria-label")).toContain("Orange wins 4 seats");
   });
 
   it("stops painting when drawing is done", () => {

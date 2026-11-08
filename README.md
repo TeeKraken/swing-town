@@ -9,12 +9,12 @@ A classroom toy for the gerrymandering puzzle: draw districts in a made-up town,
 - **A made-up town.** 36 blocks in a 6 by 6 grid, 100 voters in each. The number on a block is how many vote orange; the rest vote purple. Orange and purple are just colors, never parties, and the town isn't a real place.
 - **Three ready-made maps** of the same town, each with 6 districts of 6 blocks:
   - *Fair boxes:* plain boxes. Orange has 46.8% of the votes and wins 3 of 6 seats.
-  - *Greedy (packed and cracked):* purple voters packed into one district, the rest cracked so orange wins 5 of 6, four of them by less than 4 points.
-  - *Safe seats:* orange's voters kept together, so orange wins only 3 seats, each by about 10 points or more.
+  - *Greedy (packed and cracked):* purple voters packed into one district, the rest cracked so orange wins 5 of 6: four thin wins, each less than four points above half, and one safer win.
+  - *Safe seats:* orange's voters kept together, so orange wins only 3 seats, each at least ten points above half.
 - **Draw your own map** by picking a district and tapping or dragging across blocks (or with the keyboard). It checks that every block is in a district, every district has exactly 6 blocks, and each district joins up side to side, and says in plain words what to fix.
 - **A swing slider** from 10 points toward purple to 10 points toward orange. Every block and district is re-scored live, with seats per color and a chart (and table) of orange's seats at every swing for the current map.
 - **A five-step story** for a class: meet the town, the greedy map, a 3-point swing that takes the greedy map from 5 seats to 1, the safe map that holds even at 10 points, and a challenge: draw a map that keeps a majority for orange (4 of 6) even after a 5-point swing toward purple. None of the ready-made maps meets it; a hint is there for anyone stuck.
-- **Print this map:** a one-page printout of the current map (numbers before any swing, district numbers, thick borders), each district's result, and a table of seats at every swing, to use alongside the paper puzzle.
+- **Print this map:** a one-page printout (checked on A4 and US Letter), with the made-up-town and JRMF framing at the top, of the current map (numbers before any swing, district numbers, thick borders), each district's result, and a table of seats at every swing, to use alongside the paper puzzle.
 
 Works from 375px wide with touch, mouse or keyboard, follows your system's light or dark mode, has visible keyboard focus, and respects "reduce motion". Nothing you draw is uploaded or saved. No account, no cookies, no analytics scripts, no third-party scripts, and no tracking by the app. Like any website's host, Vercel keeps request logs that can include IP addresses and referring sites. We only look at weekly totals of requests to load the app, grouped by referring site, to see whether people find it. We don't look at individual requests.
 
@@ -45,6 +45,8 @@ pnpm check     # typecheck + tests
 pnpm build     # production build into dist/
 pnpm preview   # serve the build
 ```
+
+`pnpm e2e` builds the app and runs real-browser checks with Playwright (`e2e/run.mjs`): mixed mouse and keyboard painting keeps focus on the edited block, an unfinished map announces no results, and the printout fits one page on A4 and US Letter for several maps at no swing and at 5 points toward purple. It isn't run in CI. It needs a Chromium: set `CHROMIUM_PATH`, or run `pnpm exec playwright-core install chromium` once.
 
 - `src/logic/town.ts`: swing, district results, ties, seats, the seats-vs-swing curve, map checks and their plain-language messages, the challenge check.
 - `src/logic/presets.ts`: the town and the three ready-made maps.
