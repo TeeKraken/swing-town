@@ -66,6 +66,8 @@ describe("Swing Town page", () => {
     expect($<HTMLAnchorElement>("jrmf-link").href).toBe(JRMF_PUZZLE_URL);
     expect(document.body.textContent).toContain("isn't made by or affiliated with JRMF");
     expect(document.body.textContent).toContain("Made entirely by an AI");
+    expect(document.body.textContent).toContain("as a house build");
+    expect(document.body.textContent).toContain("anyone can build this idea too");
   });
 
   it("switches presets and re-scores live with the swing", () => {
