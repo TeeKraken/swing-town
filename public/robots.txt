@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://swing-town.vercel.app/sitemap.xml
